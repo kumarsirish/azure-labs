@@ -33,11 +33,6 @@ stages:
     pool:
       name: LaptopPool
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '$(pythonVersion)'
-      displayName: 'Use Python $(pythonVersion)'
-
     - script: |
         source ~/python3.12_venv/bin/activate
         pip install -r requirements.txt
@@ -64,17 +59,13 @@ stages:
   jobs:
   - deployment: DeploymentJob
     pool:
-      vmImage: $(vmImageName)
+       name: LaptopPool
     environment: $(environmentName)
     strategy:
       runOnce:
         deploy:
           steps:
-
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '$(pythonVersion)'
-            displayName: 'Use Python version'
+        
 
           - task: AzureWebApp@1
             displayName: 'Deploy Azure Web App : devops-app'
