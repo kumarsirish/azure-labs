@@ -50,5 +50,5 @@ stages:
     steps:
     - script: |
         source ~/python3.12_venv/bin/activate
-        python src/main.py
+        timeout 60s python src/main.py
       displayName: Run application
