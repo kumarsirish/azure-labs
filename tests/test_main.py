@@ -5,7 +5,7 @@ import os
 # Add the parent directory to the path to import from src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from src.main import app
+from src.app import app
 
 
 class TestMainApp(unittest.TestCase):
