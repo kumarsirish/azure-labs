@@ -1,24 +1,54 @@
-# Python package
-# Create and test a Python package on multiple Python versions.
-# Add steps that analyze code, save the dist with the build record, publish to a PyPI-compatible index, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
-
 trigger:
 - main
 
 pool:
-  name: LaptopPool 
+  name: LaptopPool
 
-steps:
+stages:
 
-- script: |
-    source ~/python3.12_venv/bin/activate
-    python --version
-    python -m pip install --upgrade pip
-    pip install -r requirements.txt
-  displayName: 'Install dependencies Python 3.12'
+# --------------------
+# BUILD STAGE
+# --------------------
+- stage: Build
+  displayName: Build
+  jobs:
+  - job: BuildJob
+    displayName: Install Dependencies
+    steps:
+    - script: |
+        source ~/python3.12_venv/bin/activate
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+      displayName: Install dependencies (Python 3.12)
 
-- script: |
-    pip install pytest pytest-azurepipelines
-    pytest
-  displayName: 'pytest'
+# --------------------
+# TEST STAGE
+# --------------------
+- stage: Test
+  displayName: Test
+  dependsOn: Build
+  jobs:
+  - job: TestJob
+    displayName: Run Tests
+    steps:
+    - script: |
+        source ~/python3.12_venv/bin/activate
+        pip install pytest pytest-azurepipelines
+        pytest
+      displayName: Run pytest
+
+# --------------------
+# RUN STAGE
+# --------------------
+- stage: Run
+  displayName: Run Application
+  dependsOn: Test
+  jobs:
+  - job: RunJob
+    displayName: Start App
+    steps:
+    - script: |
+        source ~/python3.12_venv/bin/activate
+        python main.py
+      displayName: Run application
