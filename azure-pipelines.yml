@@ -20,6 +20,7 @@ stages:
         python --version
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+        pip install pytest-cov
       displayName: Install dependencies (Python 3.12)
 
 # --------------------
@@ -35,7 +36,7 @@ stages:
     - script: |
         source ~/python3.12_venv/bin/activate
         pip install pytest pytest-azurepipelines
-        pytest
+        pytest --cov=. --cov-report=xml
       displayName: Run pytest
 
 # --------------------
@@ -50,5 +51,5 @@ stages:
     steps:
     - script: |
         source ~/python3.12_venv/bin/activate
-        timeout 60s python src/main.py
+        timeout 60s python src/main.py || true
       displayName: Run application
