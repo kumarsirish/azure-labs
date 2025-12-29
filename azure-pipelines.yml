@@ -38,6 +38,11 @@ stages:
         pip install pytest pytest-azurepipelines
         pytest --cov=. --cov-report=xml
       displayName: Run pytest
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish code coverage
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
 
 # --------------------
 # RUN STAGE
@@ -53,3 +58,4 @@ stages:
         source ~/python3.12_venv/bin/activate
         timeout 60s python src/main.py || true
       displayName: Run application
+    
