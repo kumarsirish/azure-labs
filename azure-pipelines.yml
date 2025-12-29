@@ -50,5 +50,5 @@ stages:
     steps:
     - script: |
         source ~/python3.12_venv/bin/activate
-        python main.py
+        python src/main.py
       displayName: Run application
