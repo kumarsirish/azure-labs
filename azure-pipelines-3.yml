@@ -1,0 +1,89 @@
+trigger:
+- main
+
+pool:
+  name: LaptopPool
+
+variables:
+  webAppName: 'devops-app'
+  azureServiceConnection: 'web-app'
+  projectRoot: $(System.DefaultWorkingDirectory)
+
+stages:
+
+# ====================
+# BUILD STAGE
+# ====================
+- stage: Build
+  displayName: Build
+  jobs:
+  - job: BuildJob
+    displayName: Build Job
+    steps:
+    - script: |
+        source ~/python3.12_venv/bin/activate
+        python --version
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-cov
+      displayName: Install dependencies
+
+    - task: ArchiveFiles@2
+      displayName: Archive application
+      inputs:
+        rootFolderOrFile: '$(projectRoot)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+        replaceExistingArchive: true
+
+    - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
+      artifact: drop
+
+# ====================
+# TEST STAGE
+# ====================
+- stage: Test
+  displayName: Test
+  dependsOn: Build
+  condition: succeeded('Build')
+  jobs:
+  - job: TestJob
+    displayName: Test Job
+    steps:
+    - script: |
+        source ~/python3.12_venv/bin/activate
+        pip install pytest pytest-cov pytest-azurepipelines
+        pytest --cov=. --cov-report=xml
+      displayName: Run tests with coverage
+
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish code coverage
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+
+# ====================
+# DEPLOY STAGE
+# ====================
+- stage: Deploy
+  displayName: Deploy to Azure App Service
+  dependsOn: Test
+  condition: succeeded('Test')
+  jobs:
+  - deployment: DeployWebApp
+    displayName: Deploy Job
+    environment: dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+          - task: AzureWebApp@1
+            displayName: Deploy Web App
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              appName: $(webAppName)
+              package: '$(Pipeline.Workspace)/drop/app.zip'
