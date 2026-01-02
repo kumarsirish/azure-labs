@@ -3,12 +3,17 @@ trigger: none
 pool:
   name: LaptopPool
 
-variables:
-- group: devops-sirish-vault-vars   # Linked to devops-sirish-vault
-
 steps:
+- task: AzureKeyVault@2
+  displayName: Fetch secrets from Key Vault
+  inputs:
+    azureSubscription: web-app
+    KeyVaultName: devops-sirish-vault
+    SecretsFilter: DB_PASSWORD
+    RunAsPreJob: true
+
 - script: |
-    echo "Vault name: devops-sirish-vault"
     echo "Secret key name: DB_PASSWORD"
     echo "Secret value: $(DB_PASSWORD)"
-  displayName: Echo vault secret (value will be masked)
+  displayName: Echo secret (value will be masked)
+
