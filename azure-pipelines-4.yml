@@ -9,11 +9,11 @@ steps:
   inputs:
     azureSubscription: web-app
     KeyVaultName: devops-vault-sirish
-    SecretsFilter: DB_PASSWORD
+    SecretsFilter: DBPASSWORD
     RunAsPreJob: true
 
 - script: |
-    echo "Secret key name: DB_PASSWORD"
-    echo "Secret value: $(DB_PASSWORD)"
+    echo "Secret key name: DBPASSWORD"
+    echo "Secret value: $(DBPASSWORD)"
   displayName: Echo secret (value will be masked)
 
