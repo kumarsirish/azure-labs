@@ -1,0 +1,14 @@
+trigger: none
+
+pool:
+  name: LaptopPool
+
+variables:
+- group: devops-sirish-vault-vars   # Linked to devops-sirish-vault
+
+steps:
+- script: |
+    echo "Vault name: devops-sirish-vault"
+    echo "Secret key name: DB_PASSWORD"
+    echo "Secret value: $(DB_PASSWORD)"
+  displayName: Echo vault secret (value will be masked)
