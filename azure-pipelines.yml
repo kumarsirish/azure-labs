@@ -40,16 +40,16 @@ stages:
   dependsOn: Build
   jobs:
    - job: TestJob
-    displayName: Run Tests
-    steps:
-    - script: |
+     displayName: Run Tests
+     steps:
+     - script: |
         source ~/python3.12_venv/bin/activate
         pip install pytest pytest-azurepipelines
         pytest --cov=. --cov-report=xml
-      displayName: Run pytest
-    - task: PublishCodeCoverageResults@2
-      displayName: Publish code coverage
-      inputs:
+       displayName: Run pytest
+     - task: PublishCodeCoverageResults@2
+       displayName: Publish code coverage
+       inputs:
         codeCoverageTool: Cobertura
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
 # --------------------
