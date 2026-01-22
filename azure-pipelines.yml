@@ -47,8 +47,8 @@ stages:
 # --------------------
 # RUN STAGE
 # --------------------
-- stage: Run
-  displayName: Run Application
+- stage: Run-Local
+  displayName: "Run Application locally on Laptop for 60 seconds"
   dependsOn: Test
   jobs:
   - job: RunJob
@@ -57,5 +57,29 @@ stages:
     - script: |
         source ~/python3.12_venv/bin/activate
         timeout 60s python src/app.py || true
-      displayName: Run application
+      displayName: Run application on laptop
+# ====================
+# DEPLOY STAGE
+# ====================
+- stage: Deploy
+  displayName: Deploy to Azure App Service
+  dependsOn: Test
+  condition: succeeded('Test')
+  jobs:
+  - deployment: DeployWebApp
+    displayName: Deploy Job
+    environment: dev
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - download: current
+            artifact: drop
+
+          - task: AzureWebApp@1
+            displayName: Deploy Web App
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              appName: $(webAppName)
+              package: '$(Pipeline.Workspace)/drop/app.zip'
     
