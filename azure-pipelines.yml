@@ -80,6 +80,6 @@ stages:
             displayName: Deploy Web App
             inputs:
               azureSubscription: $(azureServiceConnection)
-              appName: $(webAppName)
+              appName: web-app
               package: '$(Pipeline.Workspace)/drop/app.zip'
     
