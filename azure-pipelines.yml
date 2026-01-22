@@ -4,6 +4,11 @@ trigger:
 pool:
   name: LaptopPool
 
+variables:
+  webAppName: 'devops-app'
+  azureServiceConnection: 'web-app'
+  projectRoot: $(System.DefaultWorkingDirectory)
+
 stages:
 
 # --------------------
@@ -22,6 +27,18 @@ stages:
         pip install -r requirements.txt
         pip install pytest-cov
       displayName: Install dependencies (Python 3.12)
+    - task: ArchiveFiles@2
+      displayName: Archive application
+      inputs:
+        rootFolderOrFile: '$(projectRoot)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+        replaceExistingArchive: true
+
+    - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
+      artifact: drop
+
 
 # --------------------
 # TEST STAGE
@@ -79,7 +96,7 @@ stages:
           - task: AzureWebApp@1
             displayName: Deploy Web App
             inputs:
-              azureSubscription: web-app
-              appName: devops-app
+              azureSubscription: $(azureServiceConnection)
+              appName: $(webAppName)
               package: '$(Pipeline.Workspace)/drop/app.zip'
     
