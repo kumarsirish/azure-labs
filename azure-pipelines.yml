@@ -4,63 +4,58 @@ trigger:
 pool:
   name: LaptopPool
 
-# --------------------
-# PIPELINE PARAMETERS
-# --------------------
-parameters:
-- name: azureServiceConnection
-  type: string
-  default: demo-service-connection
-
-- name: webAppName
-  type: string
-  default: demo-app
-
 stages:
 
-# --------------------
-# BUILD STAGE
-# --------------------
-- stage: Build
-  displayName: Build
+# ====================
+# STAGE 1: BUILD DEPENDENCIES
+# ====================
+- stage: BuildDependencies
+  displayName: Build Dependencies
   jobs:
-  - job: BuildJob
+  - job: Build
+    displayName: Install Python Dependencies
     steps:
     - script: |
         source ~/python3.12_venv/bin/activate
         python --version
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest-cov
+      displayName: Install required Python packages
 
-# --------------------
-# TEST STAGE
-# --------------------
-- stage: Test
-  dependsOn: Build
+# ====================
+# STAGE 2: RUN TESTS
+# ====================
+- stage: RunTests
+  displayName: Run Unit Tests
+  dependsOn: BuildDependencies
   jobs:
-   - job: TestJob
-     displayName: Run Tests
-     steps:
-     - script: |
+  - job: Test
+    displayName: Execute Test Suite
+    steps:
+    - script: |
         source ~/python3.12_venv/bin/activate
         pip install pytest pytest-azurepipelines
         pytest --cov=. --cov-report=xml
-       displayName: Run pytest
-     - task: PublishCodeCoverageResults@2
-       displayName: Publish code coverage
-       inputs:
+      displayName: Run pytest tests
+
+    - task: PublishCodeCoverageResults@2
+      displayName: Publish Test Code Coverage
+      inputs:
         codeCoverageTool: Cobertura
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
-# --------------------
-# PACKAGE STAGE
-# --------------------
-- stage: Package
-  dependsOn: Test
+
+# ====================
+# STAGE 3: PACKAGE APPLICATION
+# ====================
+- stage: PackageApplication
+  displayName: Package Application
+  dependsOn: RunTests
   jobs:
-  - job: PackageJob
+  - job: Package
+    displayName: Create Deployment Artifact
     steps:
     - task: ArchiveFiles@2
+      displayName: Create ZIP package for deployment
       inputs:
         rootFolderOrFile: '$(System.DefaultWorkingDirectory)'
         includeRootFolder: false
@@ -69,26 +64,31 @@ stages:
         replaceExistingArchive: true
 
     - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
+      displayName: Publish Deployment Artifact
       artifact: drop
 
-# --------------------
-# DEPLOY STAGE
-# --------------------
-- stage: Deploy
-  dependsOn: Package
+# ====================
+# STAGE 4: DEPLOY TO AZURE
+# ====================
+- stage: DeployToAzure
+  displayName: Deploy to Azure App Service
+  dependsOn: PackageApplication
   jobs:
   - deployment: DeployWebApp
+    displayName: Deploy Application
     environment: dev
     strategy:
       runOnce:
         deploy:
           steps:
           - download: current
+            displayName: Download Deployment Artifact
             artifact: drop
 
           - task: AzureWebApp@1
+            displayName: Deploy Application to Azure App Service
             inputs:
-              azureSubscription: ${{ parameters.azureServiceConnection }}
-              appName: ${{ parameters.webAppName }}
+              azureSubscription: demo-service-connection
+              appName: demo-app
               package: '$(Pipeline.Workspace)/drop/app.zip'
 
