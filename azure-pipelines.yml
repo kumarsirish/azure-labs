@@ -14,15 +14,7 @@ parameters:
 
 - name: webAppName
   type: string
-  default: demo-app
-
-# --------------------
-# VARIABLES
-# --------------------
-variables:
-  azureServiceConnection: ${{ parameters.azureServiceConnection }}
-  webAppName: ${{ parameters.webAppName }}
-  projectRoot: $(System.DefaultWorkingDirectory)
+  default: demo-app-service   # ✅ FIXED
 
 stages:
 
@@ -33,7 +25,6 @@ stages:
   displayName: Build
   jobs:
   - job: BuildJob
-    displayName: Install Dependencies
     steps:
     - script: |
         source ~/python3.12_venv/bin/activate
@@ -41,52 +32,33 @@ stages:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pytest-cov
-      displayName: Install dependencies (Python 3.12)
 
 # --------------------
 # TEST STAGE
 # --------------------
 - stage: Test
-  displayName: Test
   dependsOn: Build
   jobs:
   - job: TestJob
-    displayName: Run Tests
     steps:
     - script: |
         source ~/python3.12_venv/bin/activate
-#        pip install pytest pytest-azurepipelines
-#        pytest --cov=. --cov-report=xml
-      displayName: Run pytest
-#
-#    - task: PublishCodeCoverageResults@2
-#      displayName: Publish code coverage
-#      inputs:
-#        codeCoverageTool: Cobertura
-#        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
 
 # --------------------
 # PACKAGE STAGE
 # --------------------
 - stage: Package
-  displayName: Archive and Publish Artifact
   dependsOn: Test
   jobs:
   - job: PackageJob
-    displayName: Package Application
     steps:
     - task: ArchiveFiles@2
-      displayName: Archive app.zip
       inputs:
         rootFolderOrFile: '$(System.DefaultWorkingDirectory)/src'
         includeRootFolder: false
         archiveType: zip
         archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
         replaceExistingArchive: true
-    - script: |
-        echo "Artifact contents:"
-        ls -lh $(Build.ArtifactStagingDirectory)
-      displayName: Verify archive creation
 
     - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
       artifact: drop
@@ -95,12 +67,9 @@ stages:
 # DEPLOY STAGE
 # --------------------
 - stage: Deploy
-  displayName: Deploy to Azure App Service
   dependsOn: Package
-  condition: succeeded()
   jobs:
   - deployment: DeployWebApp
-    displayName: Deploy Job
     environment: dev
     strategy:
       runOnce:
@@ -110,7 +79,6 @@ stages:
             artifact: drop
 
           - task: AzureWebApp@1
-            displayName: Deploy Web App
             inputs:
               azureSubscription: ${{ parameters.azureServiceConnection }}
               appName: ${{ parameters.webAppName }}
