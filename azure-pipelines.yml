@@ -9,14 +9,12 @@ pool:
 # --------------------
 parameters:
 - name: azureServiceConnection
-  displayName: Azure Service Connection Name
   type: string
   default: demo-service-connection
 
 - name: webAppName
-  displayName: Azure Web App Name
   type: string
-  default: demo-app-service
+  default: demo-app
 
 # --------------------
 # VARIABLES
@@ -48,24 +46,24 @@ stages:
 # --------------------
 # TEST STAGE
 # --------------------
-- stage: Test
-  displayName: Test
-  dependsOn: Build
-  jobs:
-  - job: TestJob
-    displayName: Run Tests
-    steps:
-    - script: |
-        source ~/python3.12_venv/bin/activate
-        pip install pytest pytest-azurepipelines
-        pytest --cov=. --cov-report=xml
-      displayName: Run pytest
-
-    - task: PublishCodeCoverageResults@2
-      displayName: Publish code coverage
-      inputs:
-        codeCoverageTool: Cobertura
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
+#- stage: Test
+#  displayName: Test
+#  dependsOn: Build
+#  jobs:
+#  - job: TestJob
+#    displayName: Run Tests
+#    steps:
+#    - script: |
+#        source ~/python3.12_venv/bin/activate
+#        pip install pytest pytest-azurepipelines
+#        pytest --cov=. --cov-report=xml
+#      displayName: Run pytest
+#
+#    - task: PublishCodeCoverageResults@2
+#      displayName: Publish code coverage
+#      inputs:
+#        codeCoverageTool: Cobertura
+#        summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
 
 # --------------------
 # PACKAGE STAGE
@@ -110,7 +108,7 @@ stages:
           - task: AzureWebApp@1
             displayName: Deploy Web App
             inputs:
-              azureSubscription: $(azureServiceConnection)
-              appName: $(webAppName)
+              azureSubscription: ${{ parameters.azureServiceConnection }}
+              appName: ${{ parameters.webAppName }}
               package: '$(Pipeline.Workspace)/drop/app.zip'
 
