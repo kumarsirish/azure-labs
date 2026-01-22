@@ -79,7 +79,7 @@ stages:
           - task: AzureWebApp@1
             displayName: Deploy Web App
             inputs:
-              azureSubscription: $(azureServiceConnection)
-              appName: web-app
+              azureSubscription: web-app
+              appName: devops-app
               package: '$(Pipeline.Workspace)/drop/app.zip'
     
