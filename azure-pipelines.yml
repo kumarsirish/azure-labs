@@ -4,9 +4,26 @@ trigger:
 pool:
   name: LaptopPool
 
+# --------------------
+# PIPELINE PARAMETERS
+# --------------------
+parameters:
+- name: azureServiceConnection
+  displayName: Azure Service Connection Name
+  type: string
+  default: demo-service-connection
+
+- name: webAppName
+  displayName: Azure Web App Name
+  type: string
+  default: demo-app-service
+
+# --------------------
+# VARIABLES
+# --------------------
 variables:
-  webAppName: 'demo-app'
-  azureServiceConnection: 'demo-service-connection'
+  azureServiceConnection: ${{ parameters.azureServiceConnection }}
+  webAppName: ${{ parameters.webAppName }}
   projectRoot: $(System.DefaultWorkingDirectory)
 
 stages:
@@ -27,18 +44,6 @@ stages:
         pip install -r requirements.txt
         pip install pytest-cov
       displayName: Install dependencies (Python 3.12)
-    - task: ArchiveFiles@2
-      displayName: Archive app.zip
-      inputs:
-        rootFolderOrFile: '$(projectRoot)'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
-        replaceExistingArchive: true
-
-    - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
-      artifact: drop
-
 
 # --------------------
 # TEST STAGE
@@ -55,6 +60,7 @@ stages:
         pip install pytest pytest-azurepipelines
         pytest --cov=. --cov-report=xml
       displayName: Run pytest
+
     - task: PublishCodeCoverageResults@2
       displayName: Publish code coverage
       inputs:
@@ -62,26 +68,34 @@ stages:
         summaryFileLocation: '$(System.DefaultWorkingDirectory)/coverage.xml'
 
 # --------------------
-# RUN STAGE
+# PACKAGE STAGE
 # --------------------
-- stage: RunLocal
-  displayName: "Run Application locally on Laptop for 60 seconds"
+- stage: Package
+  displayName: Archive and Publish Artifact
   dependsOn: Test
   jobs:
-  - job: RunJob
-    displayName: Start App
+  - job: PackageJob
+    displayName: Package Application
     steps:
-    - script: |
-        source ~/python3.12_venv/bin/activate
-        timeout 60s python src/app.py || true
-      displayName: Run application on laptop
-# ====================
+    - task: ArchiveFiles@2
+      displayName: Archive app.zip
+      inputs:
+        rootFolderOrFile: '$(projectRoot)'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
+        replaceExistingArchive: true
+
+    - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
+      artifact: drop
+
+# --------------------
 # DEPLOY STAGE
-# ====================
+# --------------------
 - stage: Deploy
   displayName: Deploy to Azure App Service
-  dependsOn: Test
-  condition: succeeded('Test')
+  dependsOn: Package
+  condition: succeeded()
   jobs:
   - deployment: DeployWebApp
     displayName: Deploy Job
@@ -99,4 +113,4 @@ stages:
               azureSubscription: $(azureServiceConnection)
               appName: $(webAppName)
               package: '$(Pipeline.Workspace)/drop/app.zip'
-    
+
