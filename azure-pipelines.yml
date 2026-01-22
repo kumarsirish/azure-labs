@@ -5,7 +5,7 @@ pool:
   name: LaptopPool
 
 variables:
-  webAppName: 'demo-app-service'
+  webAppName: 'demo-app'
   azureServiceConnection: 'demo-service-connection'
   projectRoot: $(System.DefaultWorkingDirectory)
 
