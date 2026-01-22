@@ -78,11 +78,15 @@ stages:
     - task: ArchiveFiles@2
       displayName: Archive app.zip
       inputs:
-        rootFolderOrFile: '$(projectRoot)'
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/src'
         includeRootFolder: false
         archiveType: zip
         archiveFile: '$(Build.ArtifactStagingDirectory)/app.zip'
         replaceExistingArchive: true
+    - script: |
+        echo "Artifact contents:"
+        ls -lh $(Build.ArtifactStagingDirectory)
+      displayName: Verify archive creation
 
     - publish: '$(Build.ArtifactStagingDirectory)/app.zip'
       artifact: drop
