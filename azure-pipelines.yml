@@ -6,7 +6,7 @@ pool:
 
 variables:
   webAppName: 'devops-app'
-  azureServiceConnection: 'web-app'
+  azureServiceConnection: 'demo-service-connection'
   projectRoot: $(System.DefaultWorkingDirectory)
 
 stages:
@@ -28,7 +28,7 @@ stages:
         pip install pytest-cov
       displayName: Install dependencies (Python 3.12)
     - task: ArchiveFiles@2
-      displayName: Archive application
+      displayName: Archive app.zip
       inputs:
         rootFolderOrFile: '$(projectRoot)'
         includeRootFolder: false
