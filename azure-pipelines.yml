@@ -47,7 +47,7 @@ stages:
 # --------------------
 # RUN STAGE
 # --------------------
-- stage: Run-Local
+- stage: RunLocal
   displayName: "Run Application locally on Laptop for 60 seconds"
   dependsOn: Test
   jobs:
