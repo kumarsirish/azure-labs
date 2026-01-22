@@ -14,7 +14,7 @@ parameters:
 
 - name: webAppName
   type: string
-  default: demo-app-service   # ✅ FIXED
+  default: demo-app
 
 stages:
 
