@@ -5,7 +5,7 @@ steps:
   - task: AzureKeyVault@2
     displayName: Fetch secrets from Key Vault
     inputs:
-      azureSubscription: web-app
+      azureSubscription: demo-devops-service-connection
       KeyVaultName: devops-vault-sirish
       SecretsFilter: DBPASSWORD
       RunAsPreJob: true
